@@ -22,12 +22,12 @@ typedef struct ProcessOut {
 
 typedef struct NodeStruct {
     Process process;
-    struct Node *next;
+    struct NodeStruct * next;
 } Node;
 
 typedef struct NodeStructOut {
     Process_out process;
-    struct Node *next;
+    struct NodeStructOut * next;
 } Node_out;
 
 void add_process(Node **head, Process new_process) {
@@ -38,7 +38,7 @@ void add_process(Node **head, Process new_process) {
     if (*head == NULL) {                          // If the list is empty
         *head = new_node;                         // New node becomes the head
     } else {
-        Node *current = *head;
+        Node * current = *head;
         while (current->next != NULL) {          // Traverse to the last node
             current = current->next;
         }
@@ -72,6 +72,18 @@ void print_processes(Node *head) {
                current->process.arrival_time,
                current->process.execution_time,
                current->process.priority);
+        current = current->next;  // Move to the next node
+    }
+}
+
+void print_processes_out(Node_out *head) {
+    Node_out *current = head;
+    while (current != NULL) {
+        printf("Process ID: %d, nb_preemptions: %d, turnaround_time: %d, waiting_time: %d\n",
+               current->process.id,
+               current->process.nb_preemptions,
+               current->process.turnaround_time,
+               current->process.waiting_time);
         current = current->next;  // Move to the next node
     }
 }
@@ -120,9 +132,9 @@ void write_file(Node * e){
 }
 
 
-void fcfs(Node * list){
-    Node_out *out = NULL;
-    Node *current = list;
+void fcfs(Node * head){
+    Node_out *head_of_fcfs_list = 0;
+    Node *current = head;
 
     int timer = 0;
     int completionTime = 0;
@@ -139,18 +151,21 @@ void fcfs(Node * list){
                 waitingTime = turnaroundTime - current -> process.execution_time;
 
                 Process_out processOut = {current -> process.id, turnaroundTime, waitingTime, 0};
-                add_processOut(out, processOut);
+                add_processOut(&head_of_fcfs_list, processOut);
                 current = current -> next;
-                timer = current ->process.arrival_time-1;
+                if(current != NULL) {
+                    timer = current->process.arrival_time;
+                }else {
+                    break;
+                }
             }
             completionTime++;
         }
         timer++;
     }
+    print_processes_out(head_of_fcfs_list);
+
 }
-
-
-
 
 int main() {
 
@@ -158,8 +173,8 @@ int main() {
 
     process_file(&head_of_process_list);
     fcfs(head_of_process_list);
-    printf("Process List:\n");
-    print_processes(head_of_process_list);
+    //printf("Process List:\n");
+    //print_processes(head_of_process_list);
     //write_file(process_list);
     // Free the memory allocated for the linked list
     free_process_list(head_of_process_list);
