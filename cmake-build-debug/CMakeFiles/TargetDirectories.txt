@@ -1,3 +1,3 @@
-/Users/anagoncalves/CLionProjects/LAB3-OS-GROUP-C/cmake-build-debug/CMakeFiles/LAB3_OS_GROUP_C.dir
-/Users/anagoncalves/CLionProjects/LAB3-OS-GROUP-C/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/anagoncalves/CLionProjects/LAB3-OS-GROUP-C/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/flgom/CLionProjects/LAB3-OS-GROUP-C/cmake-build-debug/CMakeFiles/LAB3_OS_GROUP_C.dir
+C:/Users/flgom/CLionProjects/LAB3-OS-GROUP-C/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/flgom/CLionProjects/LAB3-OS-GROUP-C/cmake-build-debug/CMakeFiles/rebuild_cache.dir
