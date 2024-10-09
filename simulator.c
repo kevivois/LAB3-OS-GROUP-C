@@ -137,29 +137,30 @@ void fcfs(Node * head){
     Node *current = head;
 
     int timer = 0;
-    int completionTime = 0;
-    int turnaroundTime = 0;
-    int waitingTime = 0;
+    int completionTime = current -> process.arrival_time;
+    int turnaroundTime;
+    int waitingTime;
 
     while(current != NULL){
+        current -> process.arrival_time;
         if (timer >= current -> process.arrival_time){
             //Execution
-            if(timer == current->process.arrival_time + current->process.execution_time){
+            if(timer == completionTime + current->process.execution_time){
                 //End of Execution
-
+                completionTime = timer;
                 turnaroundTime = completionTime - current -> process.arrival_time;
                 waitingTime = turnaroundTime - current -> process.execution_time;
 
                 Process_out processOut = {current -> process.id, turnaroundTime, waitingTime, 0};
                 add_processOut(&head_of_fcfs_list, processOut);
                 current = current -> next;
+
                 if(current != NULL) {
                     timer = current->process.arrival_time;
                 }else {
                     break;
                 }
             }
-            completionTime++;
         }
         timer++;
     }
