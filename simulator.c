@@ -155,7 +155,6 @@ Node_out fcfs(Node_in * head){
                 completionTime = timer;
                 turnaroundTime = completionTime - current -> process.arrival_time;
                 waitingTime = turnaroundTime - current -> process.execution_time;
-
                 Process_out processOut = {current -> process.id, turnaroundTime, waitingTime, 0};
                 add_processOut(&head_of_fcfs_list, processOut);
                 current = current -> next;
@@ -178,14 +177,19 @@ Node_out fcfs(Node_in * head){
 
 int main() {
     //INPUT DATA (creation of data)
+    printf("INPUT DATA  \n");
     Node_in *Input_head = 0;
     process_file(&Input_head);
+    printf("----------------------------------------------\n");
 
+    printf("Executing.....  \n");
     //Methods
     Node_out Output_data = fcfs(Input_head);
 
     //OUTPUT DATA (writing data)
+    printf("INPUT DATA  \n");
     write_file(&Output_data);
     free_process_list(Input_head);
+    printf("----------------------------------------------\n");
     return 0;
 }
