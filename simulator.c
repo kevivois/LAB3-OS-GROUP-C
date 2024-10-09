@@ -137,40 +137,35 @@ void write_file(Node_out * e){
 }
 
 //FCFS : executed in order of arrival time
-Node_out fcfs(Node_in * head){
-    Node_out *head_of_fcfs_list = 0;
+Node_out fcfs(Node_in *head) {
+    Node_out *head_of_fcfs_list = NULL;
     Node_in *current = head;
 
     int timer = 0;
     int completionTime = 0;
-    int complBefore = 0;
     int turnaroundTime;
     int waitingTime;
 
-    while(current != NULL){
-        if (timer >= current -> process.arrival_time){
-            //Execution
-            if(timer == current -> process.arrival_time + current->process.execution_time){
-                //End of Execution
-                completionTime = timer;
-                turnaroundTime = completionTime - current -> process.arrival_time;
-                waitingTime = turnaroundTime - current -> process.execution_time;
-                Process_out processOut = {current -> process.id, turnaroundTime, waitingTime, 0};
-                add_processOut(&head_of_fcfs_list, processOut);
-                current = current -> next;
-
-
-
-                if(current != NULL) {
-                    timer = timer + 1;
-                }else {
-                    break;
-                }
-
-            }
+    while (current != NULL) {
+        // goes to arrival time -> speed
+        if (timer < current->process.arrival_time) {
+            timer = current->process.arrival_time;
         }
-        timer = timer + 1;
+
+        // execution of the current process
+        // calculate values needed
+        timer += current->process.execution_time;
+        completionTime = timer;
+        turnaroundTime = completionTime - current->process.arrival_time;
+        waitingTime = turnaroundTime - current->process.execution_time;
+
+        // create new processOut and add it to the list
+        Process_out processOut = {current->process.id, turnaroundTime, waitingTime, 0};
+        add_processOut(&head_of_fcfs_list, processOut);
+
+        current = current->next;
     }
+
     return *head_of_fcfs_list;
 }
 
