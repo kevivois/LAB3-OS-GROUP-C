@@ -169,6 +169,67 @@ Node_out fcfs(Node_in *head) {
     return *head_of_fcfs_list;
 }
 
+Node_out rr(Node_in *head) {
+    Node_out *head_of_rr_list = NULL;
+    Node_in *current = head;
+
+    int timer = 0;
+    int nbPreemptions = 0;
+
+    //create queue to manage process
+    Node_in *queue[100];
+    // index of the first element
+    // when element is deleted from queue -> front++
+    int front = 0;
+    // index where next element will be enqueued
+    // when element is added to the queue -> rear++
+    int rear = 0;
+
+    //add processes to queue at their arrival time and check if queue is empty
+    while (current != NULL || front != rear) {
+        // load processes arriving at the current time
+        while (current != NULL && current->process.arrival_time <= timer) {
+            queue[rear++] = current;
+            current = current->next;
+        }
+
+        // If the queue is empty, increment the timer
+        if (front == rear) {
+            timer++;
+            continue;
+        }
+
+        // take first process from queue
+        Node_in *proc = queue[front++];
+        int execution_time = proc->process.execution_time;
+
+        // if execution_time <= RR quantum, time_to_run = execution_time, else : RR_Q
+        int time_to_run = execution_time <= RR_QUANTUM ? execution_time : RR_QUANTUM;
+        proc->process.execution_time -= time_to_run;
+        timer += time_to_run;
+
+        // process finishes
+        if (proc->process.execution_time == 0) {
+            int turnaround_time = timer - proc->process.arrival_time;
+            int waiting_time = turnaround_time - execution_time;
+            Process_out processOut = {proc->process.id, turnaround_time, waiting_time, nbPreemptions};
+            add_processOut(&head_of_rr_list, processOut);
+        } else {
+            // if process is not done, put it back in the queue
+            queue[rear++] = proc;
+        }
+
+        // increment the preemption if there are processes in the queue
+        if (front != rear) {
+            nbPreemptions++;
+            timer += CNTXT_SWITCH; // Adding context switch time
+        }
+    }
+
+    return *head_of_rr_list;
+
+}
+
 
 
 
@@ -182,7 +243,8 @@ int main() {
     printf("Executing.....  \n");
 
     //Methods
-    Node_out Output_data = fcfs(Input_head);
+    //Node_out Output_data = fcfs(Input_head);
+    Node_out Output_data = rr(Input_head);
 
 
 
