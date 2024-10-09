@@ -117,10 +117,10 @@ void process_file(Node_in **process_list) {
     //Go through all the lines and parse them
     while (fgets(line, sizeof(line), file)) {
         char *col1, *col2, *col3, *col4;
-        col1 = strtok(line, ",");
-        col2 = strtok(NULL, ",");
-        col3 = strtok(NULL, ",");
-        col4 = strtok(NULL, ",");
+        col1 = strtok(line, " ");
+        col2 = strtok(NULL, " ");
+        col3 = strtok(NULL, " ");
+        col4 = strtok(NULL, " ");
         //Create process and add it to the linked list
         Process_in process = {atoi(col1), atoi(col2), atoi(col3), atoi(col4)};
         add_processIn(process_list, process);
