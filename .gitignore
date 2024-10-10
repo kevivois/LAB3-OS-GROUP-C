@@ -25,3 +25,4 @@ build.ninja
 # Ignore log and temporary files
 *.log
 *.tmp
+/cmake-build-debug/
