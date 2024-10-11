@@ -56,7 +56,7 @@ void writeFileExecution(const char* filename, processReturn_t* processes, int n)
         exit(EXIT_FAILURE);
     }
 
-    fprintf(file, "pid,turnaround_time,waiting_time,prempted_n\n");
+    //fprintf(file, "pid,turnaround_time,waiting_time,prempted_n\n");
 
     for (int i = 0; i < n; i++) {
         fprintf(file, "%d,%d,%d,%d\n", processes[i].pid, processes[i].turnaround_time, processes[i].waiting_time, processes[i].prempted_n);
@@ -281,7 +281,7 @@ processReturn_t* SRTF(process_t* processes, int n) {
 int main(int argc, char* argv[]) {
     int index_of_function = 2;
 
-    char filename[100] = "tasks.csv";
+    char filename[100] = "data15.csv";
     process_t* processes;
     int n = 0;
     processes = readFile(filename, &n);
@@ -296,19 +296,19 @@ int main(int argc, char* argv[]) {
     {
         case 0:
             returnValues = FCFS(processes, n);
-            writeFileExecution("output.csv", returnValues, n);
+            writeFileExecution("outputFCFS.csv", returnValues, n);
             break;
         case 1:
             returnValues = RR(processes, n);
-            writeFileExecution("output.csv", returnValues, n);
+            writeFileExecution("outputRR.csv", returnValues, n);
             break;
         case 2:
             returnValues = priorityScheduler(processes, n);
-            writeFileExecution("output.csv", returnValues, n);
+            writeFileExecution("outputPR.csv", returnValues, n);
             break;
         case 3:
             returnValues = SRTF(processes, n);
-            writeFileExecution("output.csv", returnValues, n);
+            writeFileExecution("outputSRTF.csv", returnValues, n);
             break;
 
         default:
