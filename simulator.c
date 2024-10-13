@@ -2,45 +2,52 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define RR_QUANTUM 2
-#define CNTXT_SWITCH 1
+#define RR_QUANTUM 2    // round-robin time quantum
+#define CNTXT_SWITCH 1  // context switch time
+
 
 typedef struct processStruct {
-    int pid;
-    int arrival_time;
-    int execution_time;
-    int priority;
-} process_t;
+    int pid;                // process id
+    int arrival_time;       // arrival time of the process
+    int execution_time;     // time needed for execution
+    int priority;           // priority level of the process
+} process_in;
+
 
 typedef struct processReturn {
-    int pid;
-    int turnaround_time;
-    int waiting_time;
-    int prempted_n;
-} processReturn_t;
+    int pid;                 // process id
+    int turnaround_time;     // time taken for completion
+    int waiting_time;        // time spent waiting in the queue
+    int prempted_n;          // number of times the process was preempted
+} process_out;
 
-process_t* readFile(const char* filename, int* count) {
+
+process_in* readFile(char* filename, int* countLines) {
     FILE* file = fopen(filename, "r");
+    // handle file opening error
     if (file == NULL) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
 
     char line[256];
-    *count = 0;
+    *countLines = 0;
     while (fgets(line, sizeof(line), file)) {
-        (*count)++;
+        (*countLines)++;
     }
 
-    process_t* processes = (process_t*)malloc((*count) * sizeof(process_t));
+    // allocate memory for processes
+    process_in* processes = (process_in*)malloc((*countLines) * sizeof(process_in));
     if (processes == NULL) {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
+    // reset file pointer to the beginning of the file
     rewind(file);
 
-    for (int i = 0; i < *count; i++) {
+    // read the processes information from the file
+    for (int i = 0; i < *countLines; i++) {
         fscanf(file, "%d %d %d %d", &processes[i].pid, &processes[i].arrival_time,
                &processes[i].execution_time, &processes[i].priority);
     }
@@ -49,14 +56,15 @@ process_t* readFile(const char* filename, int* count) {
     return processes;
 }
 
-void writeFileExecution(const char* filename, processReturn_t* processes, int n) {
+// function to write process execution results to a file
+void writeFile(const char* filename, process_out* processes, int n) {
     FILE* file = fopen(filename, "w");
+    // handle file opening error
     if (file == NULL) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
 
-    //fprintf(file, "pid,turnaround_time,waiting_time,prempted_n\n");
 
     for (int i = 0; i < n; i++) {
         fprintf(file, "%d,%d,%d,%d\n", processes[i].pid, processes[i].turnaround_time, processes[i].waiting_time, processes[i].prempted_n);
@@ -65,73 +73,78 @@ void writeFileExecution(const char* filename, processReturn_t* processes, int n)
     fclose(file);
 }
 
-processReturn_t* FCFS(process_t* processes, int n){
-    processReturn_t* returnValues = (processReturn_t*)malloc(n * sizeof(processReturn_t));
+// FCFS scheduling algorithm
+process_out* FCFS(process_in* processes, int n){
+    // allocate memory for return values
+    process_out* returnValues = (process_out*)malloc(n * sizeof(process_out));
     if (returnValues == NULL) {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    int time = 0;
+    int timer = 0;
 
+    // process each job in the order of arrival
     for (int i = 0; i < n; i++) {
-        if (time < processes[i].arrival_time) {
-            time = processes[i].arrival_time;
+        if (timer < processes[i].arrival_time) {
+            timer = processes[i].arrival_time;  // wait until the process arrives
         }
         returnValues[i].pid = processes[i].pid;
-        if (time > processes[i].arrival_time) {
-            returnValues[i].waiting_time = time - processes[i].arrival_time;
+        if (timer > processes[i].arrival_time) {
+            returnValues[i].waiting_time = timer - processes[i].arrival_time;
         } else {
             returnValues[i].waiting_time = 0;
         }
         returnValues[i].turnaround_time = processes[i].execution_time + returnValues[i].waiting_time;
         returnValues[i].prempted_n = 0;
 
-        time += processes[i].execution_time;
+        timer += processes[i].execution_time;  // update current time after executing the process
     }
     return returnValues;
 }
 
-processReturn_t* RR(process_t* processes, int n){
-    processReturn_t* returnValues = (processReturn_t*) malloc(n * sizeof(processReturn_t));
+// RR scheduling algorithm
+process_out* RR(process_in* processes, int n){
+    process_out* returnValues = (process_out*) malloc(n * sizeof(process_out));
     if (returnValues == NULL) {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    int remaining_time[n];
-    int completed = 0;
-    int current_time = 0;
-    int prempted_count[n];
-    int waiting_time[n];
-    int turnaround_time[n];
+    int remaining_time[n];    // store remaining execution time of each process
+    int completed = 0;        // track number of completed processes
+    int current_time = 0;     // current time
+    int prempted_count[n];    // track number of times each process is preempted
+    int waiting_time[n];      // store waiting time for each process
+    int turnaround_time[n];   // store turnaround time for each process
 
-    while (completed < n) {
-        int done = 1;
+    while (completed < n) {  // repeat until all processes are completed
+        int done = 1;  // flag to indicate if all processes are completed
         for (int i = 0; i < n; i++){
-            if (remaining_time[i]>0) {
+            if (remaining_time[i]>0) {  // check if the process has remaining execution time
                 done = 0;
 
-                if (remaining_time[i] > RR_QUANTUM) {
-                    current_time += RR_QUANTUM;
-                    remaining_time[i] -= RR_QUANTUM;
-                    prempted_count[i]++;
+                if (remaining_time[i] > RR_QUANTUM) {  // if remaining time is greater than quantum
+                    current_time += RR_QUANTUM;  // increment current time by quantum
+                    remaining_time[i] -= RR_QUANTUM;  // reduce remaining time by quantum
+                    prempted_count[i]++;  // increment preemption count
                 } else {
-                    current_time += remaining_time[i];
-                    remaining_time[i] = 0;
-                    completed++;
+                    current_time += remaining_time[i];  // increment current time by remaining time
+                    remaining_time[i] = 0;  // process is completed
+                    completed++;  // increment the number of completed processes
 
-                    turnaround_time[i] = current_time - processes[i].arrival_time;
-                    waiting_time[i] = turnaround_time[i] - processes[i].execution_time;
+                    turnaround_time[i] = current_time - processes[i].arrival_time;  // calculate turnaround time
+                    waiting_time[i] = turnaround_time[i] - processes[i].execution_time;  // calculate waiting time
                 }
-
             }
         }
 
         if (done == 1) {
-            break;
+            break;  // exit loop if all processes are completed
         }
     }
+
+    // populate return values for each process
     for (int i = 0; i < n; i++) {
         returnValues[i].pid = processes[i].pid;
         returnValues[i].turnaround_time = turnaround_time[i];
@@ -142,19 +155,20 @@ processReturn_t* RR(process_t* processes, int n){
     return returnValues;
 }
 
-processReturn_t* priorityScheduler(process_t* processes, int n) {
-    processReturn_t* returnValues = (processReturn_t*)malloc(n * sizeof(processReturn_t));
+// priority scheduling algorithm
+process_out* priorityScheduler(process_in* processes, int n) {
+    process_out* returnValues = (process_out*)malloc(n * sizeof(process_out));
     if (returnValues == NULL) {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    int time = 0;
-    int completed = 0;
-    int prempted_count[n];
+    int timer = 0;
+    int completed = 0;      // number of completed processes
+    int prempted_count[n];  // number of preemptions for each process
     int waiting_time[n];
     int turnaround_time[n];
-    int remaining_time[n];
+    int remaining_time[n];  // remaining execution time for each process
     int priority[n];
 
     for (int i = 0; i < n; i++) {
@@ -165,41 +179,44 @@ processReturn_t* priorityScheduler(process_t* processes, int n) {
         turnaround_time[i] = 0;
     }
 
-    int current_process = -1;
+    int current_process = -1;  // current running process
 
     while (completed < n) {
-        int highest_priority = 4;
+        int highest_priority = 4;  // initialize with a higher priority value
         int highest_priority_index = -1;
 
+        // find the highest priority process that can be executed
         for (int i = 0; i < n; i++) {
-            if (processes[i].arrival_time <= time && priority[i] < highest_priority && remaining_time[i] > 0) {
+            if (processes[i].arrival_time <= timer && priority[i] < highest_priority && remaining_time[i] > 0) {
                 highest_priority = priority[i];
                 highest_priority_index = i;
             }
         }
 
-        if (highest_priority_index == -1) {
-            time++;
+        if (highest_priority_index == -1) {  // if no process can be executed, increment time
+            timer++;
             continue;
         }
 
+        // preempt the current process if it has a lower priority
         if (current_process != -1 && current_process != highest_priority_index && remaining_time[current_process] > 0) {
             prempted_count[current_process]++;
-            time = time + CNTXT_SWITCH;
+            timer = timer + CNTXT_SWITCH;  // simulate context switching time
         }
 
         current_process = highest_priority_index;
 
         remaining_time[highest_priority_index]--;
-        time++;
+        timer++;
 
-        if (remaining_time[highest_priority_index] == 0) {
-            printf("Process %d completed at time %d\n", processes[highest_priority_index].pid, time);
-            completed++;
-            turnaround_time[highest_priority_index] = time - processes[highest_priority_index].arrival_time;
+        if (remaining_time[highest_priority_index] == 0) {  // process is completed
+            printf("Process %d completed at time %d\n", processes[highest_priority_index].pid, timer);
+            completed++;  // increment the number of completed processes
+            turnaround_time[highest_priority_index] = timer - processes[highest_priority_index].arrival_time;
             waiting_time[highest_priority_index] = turnaround_time[highest_priority_index] - processes[highest_priority_index].execution_time;
         }
     }
+
 
     for (int i = 0; i < n; i++) {
         returnValues[i].pid = processes[i].pid;
@@ -211,17 +228,17 @@ processReturn_t* priorityScheduler(process_t* processes, int n) {
     return returnValues;
 }
 
-
-processReturn_t* SRTF(process_t* processes, int n) {
-    processReturn_t* returnValues = (processReturn_t*)malloc(n * sizeof(processReturn_t));
+// SRTF scheduling algorithm
+process_out* SRTF(process_in* processes, int n) {
+    process_out* returnValues = (process_out*)malloc(n * sizeof(process_out));
     if (returnValues == NULL) {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    int time = 0;
-    int completed = 0;
-    int prempted_count[n];
+    int timer = 0;
+    int completed = 0;      // number of completed processes
+    int prempted_count[n];  // number of preemptions for each process
     int waiting_time[n];
     int turnaround_time[n];
     int remaining_time[n];
@@ -233,41 +250,43 @@ processReturn_t* SRTF(process_t* processes, int n) {
         turnaround_time[i] = 0;
     }
 
-    int current_process = -1;
+    int current_process = -1;  // current running process
 
     while (completed < n) {
-        int shortest_remaining_time = 1000;
+        int shortest_remaining_time = 1000;  // initialize with a large value
         int shortest_remaining_time_index = -1;
 
+        // find the process with the shortest remaining time that can be executed
         for (int i = 0; i < n; i++) {
-            if (processes[i].arrival_time <= time && remaining_time[i] > 0 && remaining_time[i] < shortest_remaining_time) {
+            if (processes[i].arrival_time <= timer && remaining_time[i] > 0 && remaining_time[i] < shortest_remaining_time) {
                 shortest_remaining_time = remaining_time[i];
                 shortest_remaining_time_index = i;
             }
         }
 
-        if (shortest_remaining_time_index == -1) {
-            time++;
+        if (shortest_remaining_time_index == -1) {  // if no process can be executed, increment time
+            timer++;
             continue;
         }
 
+        // preempt the current process if it has a longer remaining time
         if (current_process != -1 && remaining_time[current_process] > 0 && current_process != shortest_remaining_time_index) {
             prempted_count[current_process]++;
-            time++;
+            timer++;
         }
 
         current_process = shortest_remaining_time_index;
 
-        time++;
+        timer++;  // increment time
         remaining_time[shortest_remaining_time_index]--;
-        shortest_remaining_time--;
 
-        if (remaining_time[shortest_remaining_time_index] == 0) {
-            completed++;
-            turnaround_time[shortest_remaining_time_index] = time - processes[shortest_remaining_time_index].arrival_time;
+        if (remaining_time[shortest_remaining_time_index] == 0) {  // process is completed
+            completed++;  // increment the number of completed processes
+            turnaround_time[shortest_remaining_time_index] = timer - processes[shortest_remaining_time_index].arrival_time;
             waiting_time[shortest_remaining_time_index] = turnaround_time[shortest_remaining_time_index] - processes[shortest_remaining_time_index].execution_time;
         }
     }
+
 
     for (int i = 0; i < n; i++) {
         returnValues[i].pid = processes[i].pid;
@@ -278,14 +297,15 @@ processReturn_t* SRTF(process_t* processes, int n) {
     return returnValues;
 }
 
+
 int main(int argc, char* argv[]) {
-    int index_of_function = 2;
+    int index_of_function = 1;
 
     char filename[100] = "data15.csv";
-    process_t* processes;
-    int n = 0;
-    processes = readFile(filename, &n);
-    processReturn_t* returnValues = (processReturn_t*)malloc(n * sizeof(processReturn_t));
+    process_in* processes;  // array to store process input data
+    int n = 0;  // number of processes
+    processes = readFile(filename, &n);  // read processes from file
+    process_out* returnValues = (process_out*)malloc(n * sizeof(process_out));  // allocate memory for return values
 
     if (returnValues == NULL) {
         perror("Error allocating memory");
@@ -295,27 +315,27 @@ int main(int argc, char* argv[]) {
     switch (index_of_function)
     {
         case 0:
-            returnValues = FCFS(processes, n);
-            writeFileExecution("outputFCFS.csv", returnValues, n);
+            returnValues = FCFS(processes, n);  // execute FCFS
+            writeFile("outputFCFS.csv", returnValues, n);  // write results to file
             break;
         case 1:
-            returnValues = RR(processes, n);
-            writeFileExecution("outputRR.csv", returnValues, n);
+            returnValues = RR(processes, n);  // execute round-robin
+            writeFile("outputRR.csv", returnValues, n);  // write results to file
             break;
         case 2:
-            returnValues = priorityScheduler(processes, n);
-            writeFileExecution("outputPR.csv", returnValues, n);
+            returnValues = priorityScheduler(processes, n);  // execute priority scheduling
+            writeFile("outputPR.csv", returnValues, n);  // write results to file
             break;
         case 3:
-            returnValues = SRTF(processes, n);
-            writeFileExecution("outputSRTF.csv", returnValues, n);
+            returnValues = SRTF(processes, n);  // execute shortest remaining time first
+            writeFile("outputSRTF.csv", returnValues, n);  // write results to file
             break;
 
         default:
             break;
     }
 
-    free(processes);
-    free(returnValues);
+    free(processes);  // free the allocated memory for processes
+    free(returnValues);  // free the allocated memory for return values
     return 0;
 }
