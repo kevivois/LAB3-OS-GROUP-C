@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define RR_QUANTUM 2    // round-robin time quantum
 #define CNTXT_SWITCH 1  // context switch time
@@ -105,13 +106,13 @@ process_out* FCFS(process_in* processes, int n){
 
 // RR scheduling algorithm
 process_out* RR(process_in* processes, int n){
-    process_out* returnValues = (process_out*) malloc(n * sizeof(process_out));
+    process_out* returnValues = (process_out*)malloc(n * sizeof(process_out));
     if (returnValues == NULL) {
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    int time = 0;
+    int timer = 0;
     int completed = 0;
     int prempted_count[n];
     int waiting_time[n];
@@ -126,30 +127,33 @@ process_out* RR(process_in* processes, int n){
     }
 
     int current_process = -1;
-    int quantum = RR_QUANTUM;
 
     while (completed < n) {
         for (int i = 0; i < n; i++) {
-            if (processes[i].arrival_time <= time && remaining_time[i] > 0) {
+            if (processes[i].arrival_time <= timer && remaining_time[i] > 0) {
+
                 if (current_process != i) {
                     prempted_count[i]++;
+                    //printf("prempted count %d\n", prempted_count[i]);
                 }
                 current_process = i;
-                if (remaining_time[i] > quantum) {
-                    time += quantum;
-                    remaining_time[i] -= quantum;
+                if (remaining_time[i] > RR_QUANTUM) {
+                    timer += RR_QUANTUM;
+                    remaining_time[i] -= RR_QUANTUM;
                 } else {
-                    time += remaining_time[i];
+                    timer += remaining_time[i];
                     remaining_time[i] = 0;
                     completed++;
-                    printf("Process %d completed at time %d\n", processes[i].pid, time);
-                    turnaround_time[i] = time - processes[i].arrival_time;
+                    turnaround_time[i] = timer - processes[i].arrival_time;
                     waiting_time[i] = turnaround_time[i] - processes[i].execution_time;
+                    printf("Process %d completed at timer %d\n", processes[i].pid, timer);
+                    printf("Completed: %d\n", completed);
                 }
+            } else if (processes[i+1].arrival_time <= timer) {
+               timer++;
             }
-            else {
-                time++;
-            }
+
+            //printf("Timer: %d\n", timer);
         }
     }
 
@@ -163,6 +167,8 @@ process_out* RR(process_in* processes, int n){
 
     return returnValues;
 }
+
+
 
 // priority scheduling algorithm
 process_out* priorityScheduler(process_in* processes, int n) {
@@ -281,7 +287,7 @@ process_out* SRTF(process_in* processes, int n) {
         // preempt the current process if it has a longer remaining time
         if (current_process != -1 && remaining_time[current_process] > 0 && current_process != shortest_remaining_time_index) {
             prempted_count[current_process]++;
-            timer++;
+            timer += CNTXT_SWITCH;  // simulate context switching time
         }
 
         current_process = shortest_remaining_time_index;
@@ -309,7 +315,7 @@ process_out* SRTF(process_in* processes, int n) {
 int main(int argc, char* argv[]) {
     int index_of_function = 1;
 
-    char filename[100] = "data.csv";
+    char filename[100] = "tasks.csv";
     process_in* processes;  // array to store process input data
     int n = 0;  // number of processes
     processes = readFile(filename, &n);  // read processes from file
