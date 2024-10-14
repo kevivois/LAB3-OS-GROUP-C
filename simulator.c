@@ -22,6 +22,7 @@ typedef struct processReturn {
 } process_out;
 
 
+//Reading a file and returning a table of processes
 process_in* readFile(char* filename, int* countLines) {
     FILE* file = fopen(filename, "r");
     // handle file opening error
@@ -29,13 +30,12 @@ process_in* readFile(char* filename, int* countLines) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
-
     char line[256];
     *countLines = 0;
+    //counting all the line of the file
     while (fgets(line, sizeof(line), file)) {
         (*countLines)++;
     }
-
     // allocate memory for processes
     process_in* processes = (process_in*)malloc((*countLines) * sizeof(process_in));
     if (processes == NULL) {
@@ -51,10 +51,10 @@ process_in* readFile(char* filename, int* countLines) {
         fscanf(file, "%d %d %d %d", &processes[i].pid, &processes[i].arrival_time,
                &processes[i].execution_time, &processes[i].priority);
     }
-
     fclose(file);
     return processes;
 }
+
 
 // function to write process execution results to a file
 void writeFile(const char* filename, process_out* processes, int n) {
@@ -64,14 +64,12 @@ void writeFile(const char* filename, process_out* processes, int n) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
-
-
     for (int i = 0; i < n; i++) {
         fprintf(file, "%d,%d,%d,%d\n", processes[i].pid, processes[i].turnaround_time, processes[i].waiting_time, processes[i].prempted_n);
     }
-
     fclose(file);
 }
+
 
 // FCFS scheduling algorithm
 process_out* FCFS(process_in* processes, int n){
@@ -81,9 +79,7 @@ process_out* FCFS(process_in* processes, int n){
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
-
     int timer = 0;
-
     // process each job in the order of arrival
     for (int i = 0; i < n; i++) {
         if (timer < processes[i].arrival_time) {
@@ -97,11 +93,12 @@ process_out* FCFS(process_in* processes, int n){
         }
         returnValues[i].turnaround_time = processes[i].execution_time + returnValues[i].waiting_time;
         returnValues[i].prempted_n = 0;
-
         timer += processes[i].execution_time;  // update current time after executing the process
     }
     return returnValues;
 }
+
+//TO DO ? FILLING TABLE REMAINING TIME ???
 
 // RR scheduling algorithm
 process_out* RR(process_in* processes, int n){
@@ -117,6 +114,16 @@ process_out* RR(process_in* processes, int n){
     int prempted_count[n];    // track number of times each process is preempted
     int waiting_time[n];      // store waiting time for each process
     int turnaround_time[n];   // store turnaround time for each process
+
+
+    //Filling the data (in table)
+    for (int i = 0; i < n; i++) {
+        remaining_time[i] = processes[i].execution_time;
+        prempted_count[i] = 0;
+        waiting_time[i] = 0;
+        turnaround_time[i] = 0;
+    }
+
 
     while (completed < n) {  // repeat until all processes are completed
         int done = 1;  // flag to indicate if all processes are completed
@@ -155,6 +162,7 @@ process_out* RR(process_in* processes, int n){
     return returnValues;
 }
 
+
 // priority scheduling algorithm
 process_out* priorityScheduler(process_in* processes, int n) {
     process_out* returnValues = (process_out*)malloc(n * sizeof(process_out));
@@ -171,6 +179,7 @@ process_out* priorityScheduler(process_in* processes, int n) {
     int remaining_time[n];  // remaining execution time for each process
     int priority[n];
 
+    //Filling the data (in table)
     for (int i = 0; i < n; i++) {
         remaining_time[i] = processes[i].execution_time;
         priority[i] = processes[i].priority;
@@ -301,7 +310,7 @@ process_out* SRTF(process_in* processes, int n) {
 int main(int argc, char* argv[]) {
     int index_of_function = 1;
 
-    char filename[100] = "data15.csv";
+    char filename[100] = "tasks.csv";
     process_in* processes;  // array to store process input data
     int n = 0;  // number of processes
     processes = readFile(filename, &n);  // read processes from file
