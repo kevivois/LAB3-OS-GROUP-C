@@ -22,7 +22,6 @@ typedef struct processReturn {
 } process_out;
 
 
-//Reading a file and returning a table of processes
 process_in* readFile(char* filename, int* countLines) {
     FILE* file = fopen(filename, "r");
     // handle file opening error
@@ -30,12 +29,13 @@ process_in* readFile(char* filename, int* countLines) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
+
     char line[256];
     *countLines = 0;
-    //counting all the line of the file
     while (fgets(line, sizeof(line), file)) {
         (*countLines)++;
     }
+
     // allocate memory for processes
     process_in* processes = (process_in*)malloc((*countLines) * sizeof(process_in));
     if (processes == NULL) {
@@ -51,10 +51,10 @@ process_in* readFile(char* filename, int* countLines) {
         fscanf(file, "%d %d %d %d", &processes[i].pid, &processes[i].arrival_time,
                &processes[i].execution_time, &processes[i].priority);
     }
+
     fclose(file);
     return processes;
 }
-
 
 // function to write process execution results to a file
 void writeFile(const char* filename, process_out* processes, int n) {
@@ -64,12 +64,14 @@ void writeFile(const char* filename, process_out* processes, int n) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
+
+
     for (int i = 0; i < n; i++) {
         fprintf(file, "%d,%d,%d,%d\n", processes[i].pid, processes[i].turnaround_time, processes[i].waiting_time, processes[i].prempted_n);
     }
+
     fclose(file);
 }
-
 
 // FCFS scheduling algorithm
 process_out* FCFS(process_in* processes, int n){
@@ -79,7 +81,9 @@ process_out* FCFS(process_in* processes, int n){
         perror("Error allocating memory");
         exit(EXIT_FAILURE);
     }
+
     int timer = 0;
+
     // process each job in the order of arrival
     for (int i = 0; i < n; i++) {
         if (timer < processes[i].arrival_time) {
@@ -93,12 +97,11 @@ process_out* FCFS(process_in* processes, int n){
         }
         returnValues[i].turnaround_time = processes[i].execution_time + returnValues[i].waiting_time;
         returnValues[i].prempted_n = 0;
+
         timer += processes[i].execution_time;  // update current time after executing the process
     }
     return returnValues;
 }
-
-//TO DO ? FILLING TABLE REMAINING TIME ???
 
 // RR scheduling algorithm
 process_out* RR(process_in* processes, int n){
@@ -108,15 +111,13 @@ process_out* RR(process_in* processes, int n){
         exit(EXIT_FAILURE);
     }
 
-    int remaining_time[n];    // store remaining execution time of each process
-    int completed = 0;        // track number of completed processes
-    int current_time = 0;     // current time
-    int prempted_count[n];    // track number of times each process is preempted
-    int waiting_time[n];      // store waiting time for each process
-    int turnaround_time[n];   // store turnaround time for each process
+    int time = 0;
+    int completed = 0;
+    int prempted_count[n];
+    int waiting_time[n];
+    int turnaround_time[n];
+    int remaining_time[n];
 
-
-    //Filling the data (in table)
     for (int i = 0; i < n; i++) {
         remaining_time[i] = processes[i].execution_time;
         prempted_count[i] = 0;
@@ -124,34 +125,34 @@ process_out* RR(process_in* processes, int n){
         turnaround_time[i] = 0;
     }
 
+    int current_process = -1;
+    int quantum = RR_QUANTUM;
 
-    while (completed < n) {  // repeat until all processes are completed
-        int done = 1;  // flag to indicate if all processes are completed
-        for (int i = 0; i < n; i++){
-            if (remaining_time[i]>0) {  // check if the process has remaining execution time
-                done = 0;
-
-                if (remaining_time[i] > RR_QUANTUM) {  // if remaining time is greater than quantum
-                    current_time += RR_QUANTUM;  // increment current time by quantum
-                    remaining_time[i] -= RR_QUANTUM;  // reduce remaining time by quantum
-                    prempted_count[i]++;  // increment preemption count
+    while (completed < n) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= time && remaining_time[i] > 0) {
+                if (current_process != i) {
+                    prempted_count[i]++;
+                }
+                current_process = i;
+                if (remaining_time[i] > quantum) {
+                    time += quantum;
+                    remaining_time[i] -= quantum;
                 } else {
-                    current_time += remaining_time[i];  // increment current time by remaining time
-                    remaining_time[i] = 0;  // process is completed
-                    completed++;  // increment the number of completed processes
-
-                    turnaround_time[i] = current_time - processes[i].arrival_time;  // calculate turnaround time
-                    waiting_time[i] = turnaround_time[i] - processes[i].execution_time;  // calculate waiting time
+                    time += remaining_time[i];
+                    remaining_time[i] = 0;
+                    completed++;
+                    printf("Process %d completed at time %d\n", processes[i].pid, time);
+                    turnaround_time[i] = time - processes[i].arrival_time;
+                    waiting_time[i] = turnaround_time[i] - processes[i].execution_time;
                 }
             }
-        }
-
-        if (done == 1) {
-            break;  // exit loop if all processes are completed
+            else {
+                time++;
+            }
         }
     }
 
-    // populate return values for each process
     for (int i = 0; i < n; i++) {
         returnValues[i].pid = processes[i].pid;
         returnValues[i].turnaround_time = turnaround_time[i];
@@ -159,9 +160,9 @@ process_out* RR(process_in* processes, int n){
         returnValues[i].prempted_n = prempted_count[i];
     }
 
+
     return returnValues;
 }
-
 
 // priority scheduling algorithm
 process_out* priorityScheduler(process_in* processes, int n) {
@@ -179,7 +180,6 @@ process_out* priorityScheduler(process_in* processes, int n) {
     int remaining_time[n];  // remaining execution time for each process
     int priority[n];
 
-    //Filling the data (in table)
     for (int i = 0; i < n; i++) {
         remaining_time[i] = processes[i].execution_time;
         priority[i] = processes[i].priority;
@@ -296,7 +296,6 @@ process_out* SRTF(process_in* processes, int n) {
         }
     }
 
-
     for (int i = 0; i < n; i++) {
         returnValues[i].pid = processes[i].pid;
         returnValues[i].turnaround_time = turnaround_time[i];
@@ -310,7 +309,7 @@ process_out* SRTF(process_in* processes, int n) {
 int main(int argc, char* argv[]) {
     int index_of_function = 1;
 
-    char filename[100] = "tasks.csv";
+    char filename[100] = "data.csv";
     process_in* processes;  // array to store process input data
     int n = 0;  // number of processes
     processes = readFile(filename, &n);  // read processes from file
