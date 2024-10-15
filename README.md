@@ -1,5 +1,5 @@
 
-# Scheduling Algorithm Simulator
+# Scheduling Algorithm Simulator 
 
 This project simulates various CPU scheduling algorithms and generates statistics and visualizations based on their performance. The code consists of three main components:
 
