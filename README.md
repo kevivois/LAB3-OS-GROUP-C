@@ -3,18 +3,20 @@
 
 This project simulates various CPU scheduling algorithms and generates statistics and visualizations based on their performance. The code consists of three main components:
 
-1. **Generator**: `generator.py` generates random data for the scheduling simulation.
-2. **Statistics Processor**: `stats.py` processes the generated data, calculates statistics, and creates visualizations.
-3. **CSV Reader**: Used for reading input data and exporting results.
+1. **Scheduler**: `simulator.c` simulates the execution of processes using different scheduling algorithms.
+2. **Generator**: `generator.py` generates random data for the scheduling simulation.
+3. **Statistics Processor**: `stats.py` processes the generated data, calculates statistics, and creates visualizations.
+
 
 ## Code Structure
 
 The project contains the following files:
 
+- `simulator.c`: Simulates the execution of processes using different scheduling algorithms.
 - `generator.py`: Generates random process data and exports it to CSV files.
 - `stats.py`: Reads the generated CSV files, calculates statistics, and creates visualizations.
 - `execution.csv`: Sample CSV input file (you may generate your own data using `generator.py`).
-- `output_graphs/`: Directory where all generated graphs and statistics will be saved.
+- `out/`: Directory where all generated graphs and statistics will be saved.
 
 ## How to Set Up
 
@@ -37,6 +39,12 @@ The project contains the following files:
    ```
 
 ## What Works
+
+- **Scheduling Simulation**: The `simulator.c` file simulates the execution of processes using the following scheduling algorithms:
+  - First-Come, First-Served (FCFS)
+  - Shortest remaining time first (SRTF)
+  - Priority Scheduling (PR)
+  - Round Robin (RR)
 
 - **Data Generation**: The `generator.py` file successfully generates random data including:
   - Process ID
@@ -64,18 +72,8 @@ The project contains the following files:
 
 ## Output
 
-The generated graphs will be saved in the `output_graphs` directory, and the statistics will be exported to CSV files named according to the scheduling algorithms used and the number of processes.
+The generated graphs will be saved in the `out` directory, and the statistics will be exported to CSV files named according to the scheduling algorithms used and the number of processes.
 
-### Example Output Structure
-
-```
-output_graphs/
-    ├── graph_1_Scheduler.png
-    ├── graph_2_Scheduler.png
-    ├── graph_3_Scheduler.png
-    ├── graph_4_Scheduler.png
-    └── scheduler_stats.csv
-```
 
 ## Example Usage
 
@@ -95,6 +93,3 @@ python stats.py
 
 Feel free to contribute by submitting issues or pull requests to enhance the functionality or improve the codebase.
 
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for more details.
