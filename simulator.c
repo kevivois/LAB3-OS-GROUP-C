@@ -126,6 +126,18 @@ process_out* RR(process_in* processes, int n){
     int turnaround_time[n];
     int remaining_time[n];
 
+    int shortest_arrival;
+
+    for(int i = 0; i < n; i++){
+        if (i == 0){
+            shortest_arrival = processes[i].arrival_time;
+        } else if (processes[i].arrival_time < shortest_arrival){
+            shortest_arrival = processes[i].arrival_time;
+        }
+    }
+    timer = shortest_arrival;
+
+    //filling data inside each table
     for (int i = 0; i < n; i++) {
         remaining_time[i] = processes[i].execution_time;
         prempted_count[i] = 0;
@@ -133,14 +145,20 @@ process_out* RR(process_in* processes, int n){
         turnaround_time[i] = 0;
     }
 
-    int current_process = -1;
 
+    int current_process = 0;
+
+    //Stop when every process are finished
     while (completed < n) {
         for (int i = 0; i < n; i++) {
             if (processes[i].arrival_time <= timer && remaining_time[i] > 0) {
+                printf("Process %d started at timer %d\n", processes[i].pid, timer);
+                //if the process is not the current process, we need to change the process
                 if (current_process != i) {
+                    printf("Changing process from %d to %d\n", current_process + 1, i + 1);
                     prempted_count[i]++;
-                    //printf("prempted count %d\n", prempted_count[i]);
+                    timer += CNTXT_SWITCH;
+                    printf("Timer with count switch: %d\n", timer);
                 }
                 current_process = i;
                 if (remaining_time[i] > RR_QUANTUM) {
@@ -155,8 +173,13 @@ process_out* RR(process_in* processes, int n){
                     printf("Process %d completed at timer %d\n", processes[i].pid, timer);
                     printf("Completed: %d\n", completed);
                 }
+                printf("Process %d, remaining time: %d, timer: %d\n", processes[i].pid, remaining_time[i], timer);
+
+            } //if processs has arrived but remaining time is null then when need to increment the time
+            else if (processes[i].arrival_time <= timer && remaining_time[i] == 0) {
+                printf("Process %d , timer %d\n", processes[i].pid, timer);
+                timer ++;
             }
-            //printf("Timer: %d\n", timer);
         }
     }
 
@@ -219,6 +242,8 @@ process_out* priorityScheduler(process_in* processes, int n) {
         // preempt the current process if it has a lower priority
         if (current_process != -1 && current_process != highest_priority_index && remaining_time[current_process] > 0) {
             prempted_count[current_process]++;
+            printf("changing process from %d to %d\n", current_process + 1, highest_priority_index + 1);
+            printf("remaining time of process %d: %d\n", current_process + 1, remaining_time[current_process]);
             timer = timer + CNTXT_SWITCH;  // simulate context switching time
         }
 
@@ -302,6 +327,8 @@ process_out* SRTF(process_in* processes, int n) {
             completed++;  // increment the number of completed processes
             turnaround_time[shortest_remaining_time_index] = timer - processes[shortest_remaining_time_index].arrival_time;
             waiting_time[shortest_remaining_time_index] = turnaround_time[shortest_remaining_time_index] - processes[shortest_remaining_time_index].execution_time;
+            printf("Process %d completed at time %d\n", processes[shortest_remaining_time_index].pid, timer);
+            printf("Num of completed : %d \n", completed);
         }
     }
 
@@ -316,9 +343,8 @@ process_out* SRTF(process_in* processes, int n) {
 
 
 int main(int argc, char* argv[]) {
-    int index_of_function = 1;
-
-    char filename[100] = "tasks.csv";
+    int index_of_function = 3;
+    char filename[100] = "t.csv";
     process_in* processes;  // array to store process input data
     int n = 0;  // number of processes
     processes = readFile(filename, &n);  // read processes from file
@@ -333,19 +359,19 @@ int main(int argc, char* argv[]) {
     {
         case 0:
             returnValues = FCFS(processes, n);  // execute FCFS
-            writeFile("outputFCFS.csv", returnValues, n);  // write results to file
+            writeFile("outputs/100/output_100_FCFS.csv", returnValues, n);  // write results to file
             break;
         case 1:
             returnValues = RR(processes, n);  // execute round-robin
-            writeFile("outputRR.csv", returnValues, n);  // write results to file
+            writeFile("outputs/100/output_100_RR.csv", returnValues, n);  // write results to file
             break;
         case 2:
             returnValues = priorityScheduler(processes, n);  // execute priority scheduling
-            writeFile("outputPR.csv", returnValues, n);  // write results to file
+            writeFile("dataPR100.csv", returnValues, n);  // write results to file
             break;
         case 3:
             returnValues = SRTF(processes, n);  // execute shortest remaining time first
-            writeFile("outputSRTF.csv", returnValues, n);  // write results to file
+            writeFile("t_SRTF.csv", returnValues, n);  // write results to file
             break;
 
         default:
