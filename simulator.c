@@ -1,28 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
-#define RR_QUANTUM 2    // round-robin time quantum
-#define CNTXT_SWITCH 1  // context switch time
+#define RR_QUANTUM 2    // Round-robin time
+#define CNTXT_SWITCH 1  // Context switch time
 
 
+/**
+* Structure representing a process In
+* @brief process_in(pid, arrival_time, execution_time, priority)
+*/
 typedef struct processStruct {
-    int pid;                // process id
-    int arrival_time;       // arrival time of the process
-    int execution_time;     // time needed for execution
-    int priority;           // priority level of the process
+    int pid;
+    int arrival_time;
+    int execution_time;
+    int priority;
 } process_in;
 
-
+/**
+* Structure representing a process Out
+* @brief process_out(pid, turnaround_time, waiting_time, prempted_n)
+*/
 typedef struct processReturn {
-    int pid;                 // process id
-    int turnaround_time;     // time taken for completion
-    int waiting_time;        // time spent waiting in the queue
-    int prempted_n;          // number of times the process was preempted
+    int pid;
+    int turnaround_time;
+    int waiting_time;
+    int prempted_n;
 } process_out;
 
-
+/**
+* read a file with
+* @brief process_out(pid, turnaround_time, waiting_time, prempted_n)
+*/
 process_in* readFile(char* filename, int* countLines) {
     FILE* file = fopen(filename, "r");
     // handle file opening error
@@ -131,7 +138,6 @@ process_out* RR(process_in* processes, int n){
     while (completed < n) {
         for (int i = 0; i < n; i++) {
             if (processes[i].arrival_time <= timer && remaining_time[i] > 0) {
-
                 if (current_process != i) {
                     prempted_count[i]++;
                     //printf("prempted count %d\n", prempted_count[i]);
@@ -149,10 +155,7 @@ process_out* RR(process_in* processes, int n){
                     printf("Process %d completed at timer %d\n", processes[i].pid, timer);
                     printf("Completed: %d\n", completed);
                 }
-            } else if (processes[i+1].arrival_time <= timer) {
-               timer++;
             }
-
             //printf("Timer: %d\n", timer);
         }
     }
