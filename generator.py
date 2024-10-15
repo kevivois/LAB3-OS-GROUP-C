@@ -13,7 +13,7 @@ def gen_csv(length):
         line.append(rdm_priority())
         data.append(line)
         # tete de neuille
-    filename = "cmake-build-debug/data.csv"
+    filename = f"inputs/data_{length}.csv"
     with open(filename, mode='w', newline='') as file:
         for row in data:
             file.write(" ".join(str(r) for r in row) + "\n")
@@ -27,4 +27,8 @@ def get_arrival_time(rate=5):
 def get_execution_time(lgth,scale=20,sm=10):
     return round(expon.rvs(scale,lgth) + sm)
 
-gen_csv(15)
+
+amounts = [10,50,100,500,1000]
+
+for i in amounts:
+    gen_csv(i)
